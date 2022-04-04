@@ -46,6 +46,8 @@ from transformers import (
 
 from dataset import KBQGDataset
 
+from nltk.translate.bleu_score import corpus_bleu
+
 
 logger = logging.getLogger(__name__)
 
@@ -292,6 +294,8 @@ def main():
             "max_length": args.val_max_target_length if args is not None else config.max_length,
             "num_beams": args.num_beams,
         }
+        hypotheses = []
+        list_of_references = []
         for step, batch in enumerate(eval_dataloader):
             with torch.no_grad():
                 generated_tokens = accelerator.unwrap_model(model).generate(
@@ -321,8 +325,23 @@ def main():
 
                 decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
 
+                hypotheses.extend(decoded_preds)
+                list_of_references.extend(decoded_labels)
+        
+        result = corpus_bleu(
+            list_of_references=list_of_references,
+            hypotheses=hypotheses,
+            weights=[
+                (1, 0, 0, 0),
+                (0.5, 0.5, 0, 0),
+                (0.33, 0.33, 0.33, 0),
+                (0.25, 0.25,  0.25, 0.25)
+            ]
+        )
 
-        if args.push_to_hub and epoch < args.num_train_epochs - 1:
+        logger.info(f"evaluation at epoch {epoch}, result: {result}")
+
+        if epoch < args.num_train_epochs - 1:
             accelerator.wait_for_everyone()
             unwrapped_model = accelerator.unwrap_model(model)
             unwrapped_model.save_pretrained(args.output_dir, save_function=accelerator.save)
