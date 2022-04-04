@@ -287,11 +287,9 @@ def main():
                 break
 
         model.eval()
-        if args.val_max_target_length is None:
-            args.val_max_target_length = args.max_target_length
 
         gen_kwargs = {
-            "max_length": args.val_max_target_length if args is not None else config.max_length,
+            "max_length": args.max_target_length if args is not None else config.max_length,
             "num_beams": args.num_beams,
         }
         hypotheses = []
