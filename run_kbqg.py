@@ -299,18 +299,18 @@ def main():
         for step, batch in enumerate(eval_dataloader):
             with torch.no_grad():
                 generated_tokens = accelerator.unwrap_model(model).generate(
-                    batch["input_ids"],
-                    attention_mask=batch["attention_mask"],
+                    batch["source_ids"],
+                    attention_mask=batch["source_mask"],
                     **gen_kwargs,
                 )
 
                 generated_tokens = accelerator.pad_across_processes(
                     generated_tokens, dim=1, pad_index=tokenizer.pad_token_id
                 )
-                labels = batch["labels"]
+                labels = batch["target_ids"]
                 if not args.pad_to_max_length:
                     # If we did not pad to max length, we need to pad the labels too
-                    labels = accelerator.pad_across_processes(batch["labels"], dim=1, pad_index=tokenizer.pad_token_id)
+                    labels = accelerator.pad_across_processes(batch["target_ids"], dim=1, pad_index=tokenizer.pad_token_id)
 
                 generated_tokens = accelerator.gather(generated_tokens).cpu().numpy()
                 labels = accelerator.gather(labels).cpu().numpy()
