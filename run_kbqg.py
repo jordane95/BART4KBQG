@@ -173,13 +173,15 @@ def main():
     # If passed along, set the training seed now.
     if args.seed is not None:
         set_seed(args.seed)
-
-    train_dataset = KBQGDataset(tokenizer, args.data_dir, 'train', args.max_source_length, args.max_target_length)
-    eval_dataset = KBQGDataset(tokenizer, args.data_dir, 'val', args.max_source_length, args.max_target_length)
-
+    
     # Load pretrained model and tokenizer
     model = BartForConditionalGeneration.from_pretrained(args.model_name_or_path)
     tokenizer = BartTokenizer.from_pretrained(args.model_name_or_path)
+
+    # Load dataset
+    train_dataset = KBQGDataset(tokenizer, args.data_dir, 'train', args.max_source_length, args.max_target_length)
+    eval_dataset = KBQGDataset(tokenizer, args.data_dir, 'val', args.max_source_length, args.max_target_length)
+
 
     model.resize_token_embeddings(len(tokenizer))
     if model.config.decoder_start_token_id is None:
