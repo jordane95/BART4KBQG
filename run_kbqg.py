@@ -269,7 +269,7 @@ def main():
             outputs = model(
                 input_ids=batch["source_ids"],
                 attention_mask=batch["source_mask"],
-                decoder_input_ids=batch["target_ids"]
+                labels=batch["target_ids"],
             )
             loss = outputs.loss
             loss = loss / args.gradient_accumulation_steps
